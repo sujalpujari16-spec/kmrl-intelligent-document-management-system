@@ -1,0 +1,6 @@
+{
+  "name": "KMRL Intelligent Document Management System",
+  "description": "AI-powered document management, OCR pipeline, RAG search, and LangGraph multi-agent orchestration for Kochi Metro Rail Limited.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
