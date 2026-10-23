@@ -1082,7 +1082,16 @@ async function startServer() {
   });
 }
 
-if (!process.env.VERCEL) {
+// Only start standalone HTTP listener when executed directly (npm run dev or npm start)
+const isDirectRun = !process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME && (
+  Boolean(process.argv[1] && (
+    process.argv[1].endsWith('server.ts') || 
+    process.argv[1].endsWith('server.cjs') ||
+    process.argv[1].endsWith('server.js')
+  ))
+);
+
+if (isDirectRun) {
   startServer();
 }
 
