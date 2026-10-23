@@ -3,7 +3,6 @@ import express from 'express';
 import path from 'path';
 import crypto from 'crypto';
 import multer from 'multer';
-import { createServer as createViteServer } from 'vite';
 import { DocumentItem, DocumentStatus, UserRole } from './src/types';
 import { SupabaseDBService, DBUser } from './server/dbService';
 import { 
@@ -1065,6 +1064,7 @@ async function startServer() {
   }
 
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
