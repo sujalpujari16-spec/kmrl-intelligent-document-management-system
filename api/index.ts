@@ -1,6 +1,17 @@
 export default async function handler(req: any, res: any) {
   try {
-    const { default: app } = await import('../server');
+    let appModule: any;
+    try {
+      appModule = await import('../server.ts');
+    } catch {
+      try {
+        appModule = await import('../server.js');
+      } catch {
+        appModule = await import('../dist/server.cjs');
+      }
+    }
+    const app = appModule.default || appModule;
+
     if (req.url && !req.url.startsWith('/api')) {
       req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
     }
