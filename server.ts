@@ -257,7 +257,7 @@ app.post('/api/auth/login', authRateLimiter, validateBody(LoginSchema), async (r
     req.requestId
   );
 
-  // Return ONLY user profile, NO raw JWT token in JSON response
+  // Return user profile and session token for Authorization header & Cookie dual authentication
   return res.json({
     user: {
       id: profile.id,
@@ -268,6 +268,7 @@ app.post('/api/auth/login', authRateLimiter, validateBody(LoginSchema), async (r
       department: profile.department,
       avatar: profile.avatar,
     },
+    token: sessionToken,
   });
 });
 
@@ -285,6 +286,7 @@ app.get('/api/auth/me', (req, res) => {
         department: req.user.department,
         avatar: req.user.avatar,
       },
+      token: `kmrl_dev_session_${req.user.id}`,
     });
   }
   return res.json({ authenticated: false });
@@ -485,9 +487,9 @@ app.post(
         'HR'
       );
       broadcastRoleEvent(['HR', 'Admin'], 'document_pending', { title, uploadedBy: req.user!.name });
-    } else {
-      broadcastSystemEvent('document_added', newDoc);
+      broadcastRoleEvent(['HR', 'Admin'], 'notification_created', { title: 'New Document Pending Approval' });
     }
+    broadcastSystemEvent('document_added', newDoc);
 
     return res.status(201).json(newDoc);
   }
@@ -547,11 +549,15 @@ app.post(
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // Update pgvector embeddings index
-    if (newStatus === 'Approved') {
-      await indexDocumentToPgVector(updated);
-    } else {
-      await removeDocumentPgVectorChunks(updated.id);
+    // Update pgvector embeddings index safely
+    try {
+      if (newStatus === 'Approved') {
+        await indexDocumentToPgVector(updated);
+      } else {
+        await removeDocumentPgVectorChunks(updated.id);
+      }
+    } catch (embErr) {
+      console.warn('[pgvector Indexing/Removal Warning]:', embErr);
     }
 
     await SupabaseDBService.logAudit(
@@ -567,6 +573,13 @@ app.post(
       req.requestId
     );
 
+    await SupabaseDBService.addNotification(
+      `Document ${newStatus}`,
+      `"${updated.title}" was marked as ${newStatus} by ${req.user!.name}.`,
+      newStatus === 'Approved' ? 'success' : 'warning',
+      'All'
+    );
+    broadcastSystemEvent('notification_created', { title: `Document ${newStatus}` });
     broadcastSystemEvent('document_updated', updated);
     return res.json(updated);
   }
@@ -820,6 +833,14 @@ app.post('/api/leaves', requireAuth, validateBody(LeaveApplicationSchema), async
     );
 
     broadcastRoleEvent(['HR', 'Admin'], 'leave_pending', newLeave);
+    broadcastSystemEvent('leave_created', newLeave);
+    await SupabaseDBService.addNotification(
+      'New Leave Application',
+      `${req.user!.name} (${req.user!.department}) applied for ${durationDays} day(s) ${leaveType}.`,
+      'info',
+      'HR'
+    );
+    broadcastSystemEvent('notification_created', { title: 'New Leave Application' });
     return res.status(201).json(newLeave);
   } catch (err: any) {
     return res.status(400).json({ error: err.message });
@@ -838,6 +859,13 @@ const handleLeaveActionRoute = async (req: any, res: any) => {
         req.user!.name,
         notes
       );
+      await SupabaseDBService.addNotification(
+        'Leave Application Approved',
+        `Leave application ${req.params.id} has been approved by ${req.user!.name}.`,
+        'success',
+        'All'
+      );
+      broadcastSystemEvent('notification_created', { title: 'Leave Application Approved' });
       broadcastSystemEvent('leave_updated', { id: req.params.id, status: 'Approved' });
       return res.json(result);
     } catch (err: any) {
@@ -845,6 +873,13 @@ const handleLeaveActionRoute = async (req: any, res: any) => {
     }
   } else {
     await SupabaseDBService.rejectLeaveApplication(req.params.id, req.user!.id, req.user!.name, notes);
+    await SupabaseDBService.addNotification(
+      'Leave Application Rejected',
+      `Leave application ${req.params.id} was rejected by ${req.user!.name}. Notes: ${notes || 'None'}`,
+      'warning',
+      'All'
+    );
+    broadcastSystemEvent('notification_created', { title: 'Leave Application Rejected' });
     broadcastSystemEvent('leave_updated', { id: req.params.id, status: 'Rejected' });
     return res.json({ success: true, message: 'Leave application rejected.' });
   }
@@ -1048,6 +1083,14 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     mode: 'Supabase PostgreSQL Cloud Mode',
     vectorDimension: 768,
+  });
+});
+
+// 404 Handler for undefined API routes (ensures clean JSON response, never raw HTML)
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    error: 'API Endpoint Not Found',
+    message: `Cannot ${req.method} ${req.path}`,
   });
 });
 

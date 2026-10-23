@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { PDFParse } from 'pdf-parse';
 import mammoth from 'mammoth';
 import { DocumentItem } from '../src/types';
-import { searchPgVectorChunks, requireSupabaseAdmin, getSupabaseAdmin } from './supabaseClient';
+import { searchPgVectorChunks, requireSupabaseAdmin, getSupabaseAdmin, isSupabaseConfigured } from './supabaseClient';
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -200,6 +200,10 @@ export async function generateEmbedding(text: string): Promise<number[]> {
  */
 export async function indexDocumentToPgVector(doc: DocumentItem): Promise<{ chunksIndexed: number }> {
   if (doc.status !== 'Approved') {
+    return { chunksIndexed: 0 };
+  }
+
+  if (!isSupabaseConfigured()) {
     return { chunksIndexed: 0 };
   }
 

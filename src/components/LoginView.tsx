@@ -48,11 +48,28 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         }),
       });
 
-      const data = await res.json();
-      if (res.ok && data.user) {
+      let data: any = null;
+      const text = await res.text();
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+
+      if (res.ok && data?.user) {
         onLoginSuccess(data.user, data.token || '');
       } else {
-        setErrorMsg(data.error || 'Invalid credentials. Please verify your Employee ID and password.');
+        const errorDetail =
+          data?.message ||
+          data?.error ||
+          (text && !text.includes('<!DOCTYPE') && text.length < 200 ? text : null) ||
+          (res.status === 404
+            ? 'Authentication service endpoint not reachable (404). Service may be restarting.'
+            : res.status >= 500
+            ? `Server error (${res.status}). Please check network connectivity or retry.`
+            : 'Invalid credentials. Please verify your Employee ID and password.');
+
+        setErrorMsg(errorDetail);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Unable to connect to KMRL authentication service.');
@@ -191,7 +208,40 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 )}
               </Button>
 
-
+              {/* Demo Credentials Quick-Fill for instant one-click login */}
+              <div className="mt-2 border-t border-border/60 pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-navy uppercase tracking-wider">
+                    Demo Credentials
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">Click to fill</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { role: 'Admin', id: 'KMRL-001', pass: 'Admin@123', label: 'Admin', sub: 'Director' },
+                    { role: 'HR', id: 'KMRL-102', pass: 'HR@123', label: 'HR Dept', sub: 'Manager' },
+                    { role: 'Employee', id: 'KMRL-10245', pass: 'Employee@123', label: 'Staff', sub: 'Operations' },
+                  ].map((demo) => (
+                    <button
+                      key={demo.role}
+                      type="button"
+                      onClick={() => {
+                        setEmployeeId(demo.id);
+                        setPassword(demo.pass);
+                        setErrorMsg(null);
+                      }}
+                      className="flex flex-col items-start p-2 rounded-xl border border-border/80 bg-background/60 hover:bg-royal/10 hover:border-royal/50 transition-all text-left group cursor-pointer"
+                    >
+                      <span className="text-xs font-bold text-navy group-hover:text-royal transition-colors">
+                        {demo.label}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate w-full">
+                        {demo.id}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </form>
 
             <p className="mt-8 text-center text-xs text-muted-foreground">

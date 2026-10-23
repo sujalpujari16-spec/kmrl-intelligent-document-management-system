@@ -55,20 +55,26 @@ export default function App() {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   // Fetch API State
-  const refreshData = useCallback(async () => {
+  const refreshData = useCallback(async (activeUser?: User | null) => {
     try {
+      const userToUse = activeUser !== undefined ? activeUser : currentUser;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('kmrl_token') : null;
+
       const authHeaders: Record<string, string> = {
-        'x-user-id': currentUser?.id || '00000000-0000-0000-0000-000000000001',
-        'x-user-email': currentUser?.email || 'admin@kmrl.in',
-        'x-user-role': currentUser?.role || 'Admin',
+        'x-user-id': userToUse?.id || '',
+        'x-user-email': userToUse?.email || '',
+        'x-user-role': userToUse?.role || 'Employee',
       };
+      if (token) {
+        authHeaders['authorization'] = `Bearer ${token}`;
+      }
 
       const [docRes, logRes, notifRes, analyticsRes, usersRes] = await Promise.all([
-        fetch('/api/documents', { headers: authHeaders, credentials: 'same-origin' }),
-        fetch('/api/audit-logs', { headers: authHeaders, credentials: 'same-origin' }),
-        fetch('/api/notifications', { headers: authHeaders, credentials: 'same-origin' }),
-        fetch('/api/analytics', { headers: authHeaders, credentials: 'same-origin' }),
-        fetch('/api/users', { headers: authHeaders, credentials: 'same-origin' }),
+        fetch('/api/documents', { headers: authHeaders, credentials: 'include' }),
+        fetch('/api/audit-logs', { headers: authHeaders, credentials: 'include' }),
+        fetch('/api/notifications', { headers: authHeaders, credentials: 'include' }),
+        fetch('/api/analytics', { headers: authHeaders, credentials: 'include' }),
+        fetch('/api/users', { headers: authHeaders, credentials: 'include' }),
       ]);
 
       if (docRes.ok) {
@@ -145,7 +151,7 @@ export default function App() {
     } catch (err) {
       console.warn('API sync warning:', err);
     }
-  }, [currentUser?.id, currentUser?.email, currentUser?.role]);
+  }, [currentUser]);
 
   const handleUserUpdated = useCallback((updatedUser: User) => {
     if (currentUser && (currentUser.id === updatedUser.id || currentUser.email === updatedUser.email)) {
@@ -166,12 +172,13 @@ export default function App() {
   // Check active session on startup via secure HTTP-Only cookie or local cache
   useEffect(() => {
     async function checkAuthSession() {
-      // 1. Immediate restore from localStorage
+      let restoredUser: User | null = null;
       try {
         const cached = localStorage.getItem('kmrl_user');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && parsed.email) {
+            restoredUser = parsed;
             setCurrentUser(parsed);
             setIsAuthenticated(true);
           }
@@ -180,49 +187,65 @@ export default function App() {
 
       // 2. Verified session check from server
       try {
-        const res = await fetch('/api/auth/me');
+        const token = localStorage.getItem('kmrl_token');
+        const headers: Record<string, string> = {};
+        if (token) headers['authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/auth/me', { headers, credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated && data.user) {
+            restoredUser = data.user;
             setCurrentUser(data.user);
             setIsAuthenticated(true);
             localStorage.setItem('kmrl_user', JSON.stringify(data.user));
+            if (data.token) {
+              localStorage.setItem('kmrl_token', data.token);
+            }
           }
         }
       } catch {
         // Not authenticated
       }
+      refreshData(restoredUser);
     }
     checkAuthSession();
-    refreshData();
   }, [refreshData]);
 
   // Real-Time Server-Sent Events (SSE) Stream
   useEffect(() => {
     if (!isAuthenticated) return;
     let eventSource: EventSource | null = null;
+
+    const realTimeEvents = [
+      'document_added',
+      'document_created',
+      'document_updated',
+      'document_approved',
+      'document_rejected',
+      'document_deleted',
+      'document_pending',
+      'document_tampered',
+      'document_restored',
+      'leave_created',
+      'leave_pending',
+      'leave_updated',
+      'notification_created',
+      'user_registered',
+    ];
+
     try {
       eventSource = new EventSource('/api/events');
 
-      eventSource.addEventListener('document_created', () => {
-        refreshData();
+      realTimeEvents.forEach((evt) => {
+        eventSource!.addEventListener(evt, () => {
+          refreshData();
+        });
       });
 
-      eventSource.addEventListener('document_approved', () => {
+      eventSource.onmessage = () => {
         refreshData();
-      });
-
-      eventSource.addEventListener('document_deleted', () => {
-        refreshData();
-      });
-
-      eventSource.addEventListener('notification_created', () => {
-        refreshData();
-      });
-
-      eventSource.addEventListener('user_registered', () => {
-        refreshData();
-      });
+      };
 
       eventSource.onerror = () => {
         // SSE will auto-reconnect
@@ -231,18 +254,39 @@ export default function App() {
       console.warn('SSE EventSource not supported or failed to connect:', err);
     }
 
+    // Polling fallback to guarantee instant updates across multiple users/tabs
+    const pollInterval = setInterval(() => {
+      refreshData();
+    }, 6000);
+
+    // Sync on window focus or visibility change
+    const handleFocusSync = () => {
+      if (document.visibilityState === 'visible') {
+        refreshData();
+      }
+    };
+    window.addEventListener('focus', handleFocusSync);
+    document.addEventListener('visibilitychange', handleFocusSync);
+
     return () => {
       if (eventSource) {
         eventSource.close();
       }
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocusSync);
+      document.removeEventListener('visibilitychange', handleFocusSync);
     };
   }, [isAuthenticated, refreshData]);
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      const token = localStorage.getItem('kmrl_token');
+      const headers: Record<string, string> = {};
+      if (token) headers['authorization'] = `Bearer ${token}`;
+      await fetch('/api/auth/logout', { method: 'POST', headers, credentials: 'include' });
     } catch (e) {}
     localStorage.removeItem('kmrl_user');
+    localStorage.removeItem('kmrl_token');
     setCurrentUser(null);
     setIsAuthenticated(false);
     setActiveTab('dashboard');

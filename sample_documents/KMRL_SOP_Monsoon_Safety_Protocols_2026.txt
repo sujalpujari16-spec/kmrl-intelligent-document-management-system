@@ -1,0 +1,32 @@
+================================================================================
+KOCHI METRO RAIL LIMITED (KMRL) - OPERATIONS & SIGNALLING DIRECTORATE
+STANDARD OPERATING PROCEDURE: MONSOON OPERATIONS & TRACK SAFETY (REV 2026)
+Document ID: KMRL-SOP-OPS-2026-084 | Classification: Official KMRL Internal
+================================================================================
+
+1. OBJECTIVE & APPLICABILITY
+This Standard Operating Procedure (SOP) governs train operations, traction power management, and permanent way (P-Way) track safety across Line 1 (Aluva to Tripunithura) during heavy monsoon and cyclonic rainfall conditions. Applicable to all Train Operators, Station Controllers, Traffic Controllers, and Track Maintenance Engineers.
+
+2. SPEED RESTRICTION PROTOCOLS
+2.1 Normal Operating Speed: 80 km/h (CBTC Automatic Train Operation).
+2.2 Heavy Rain with Visibility > 200m: Maintain normal ATO speed under continuous windscreen wiper operation.
+2.3 Moderate Rainfall with Visibility 100m - 200m: Train Operators shall switch to Restricted Manual (RM) or Coded Manual (CM) mode with a maximum speed cap of 50 km/h.
+2.4 Severe Monsoon Storm (Wind Speed >= 70 km/h or Visibility < 100m):
+    - All viaduct operations shall be capped at 30 km/h.
+    - If cross-winds exceed 90 km/h, trains must halt at the nearest station platform and secure platform screen doors (PSDs).
+
+3. WATERLOGGING & VIADUCT DRAINAGE INSPECTIONS
+3.1 Viaduct scupper drains must be inspected and cleared by the Civil Engineering Unit every 72 hours during the monsoon cycle.
+3.2 Ballastless track drainage sumps between Kalamassery and Muttom yard must be checked twice daily. If water levels reach 50mm below rail head level, all train movements must switch to 15 km/h walking speed inspection.
+
+4. 750V DC THIRD RAIL TRACTION & POWER SAFETY
+4.1 Any track section experiencing water pooling reaching the bottom of the Third Rail shroud must undergo immediate controlled traction tripping from the Muttom OCC (Operations Control Centre).
+4.2 Automatic Train Control (ATC) balise markers must be tested for signal attenuation after flash flooding events.
+
+5. EMERGENCY CONTACT ROSTER
+- Chief Controller (OCC Muttom): +91 484 2846700 / Ext 101
+- P-Way Emergency Hotline: +91 484 2846722
+- Disaster Management Unit: 1800 425 0355 (Toll Free)
+
+Approved by: Director of Rolling Stock & Operations, Kochi Metro Rail Limited.
+Date of Enforcement: June 1, 2026.

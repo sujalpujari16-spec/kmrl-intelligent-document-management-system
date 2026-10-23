@@ -1,0 +1,27 @@
+================================================================================
+KOCHI METRO RAIL LIMITED (KMRL) - OPERATIONS CONTROL & WORKFORCE POLICY
+DIRECTIVE NO: KMRL/OPS/ROSTER/2026/088
+SUBJECT: 3-TIER OPERATIONAL SHIFT ROSTER & BIOMETRIC ATTENDANCE COMPLIANCE
+================================================================================
+
+1. APPLICABILITY & SCOPE
+This directive applies to all frontline station operations staff, including Station Controllers (SCs), Train Operators (TOs), Customer Facilitation Officers (CFOs), and Rolling Stock Technical Inspection teams across Phase 1 & Phase 2 corridors.
+
+2. STANDARD THREE-TIER SHIFT TIMINGS
+To guarantee uninterrupted passenger service from 06:00 AM to 11:00 PM across all 25 active metro stations, personnel are rostered into three continuous duty shifts:
+- Shift 1 (Morning Shift): 05:30 HRS to 13:30 HRS
+- Shift 2 (Evening Shift): 13:30 HRS to 21:30 HRS
+- Shift 3 (Night Maintenance & Stabling): 21:30 HRS to 05:30 HRS
+
+3. HANDOVER PROTOCOLS & MANDATORY BREATH ANALYZER TEST
+3.1 All Train Operators and Station Controllers must report at their assigned station depot or crew room at least 20 minutes prior to scheduled duty commencement.
+3.2 Every Train Operator must clear an automated digital Breath Analyzer (BA) alcohol screening before taking charge of a rake cab. Any reading > 0.00 mg/100ml results in immediate grounding and inquiry.
+3.3 Relieving crew must physically verify logbook entries, PSD interlocks, and emergency brake status before signing the digital handover manifest.
+
+4. BIOMETRIC ATTENDANCE & GRACE PERIOD
+- Morning Shift Grace Period: Up to 05:40 HRS (maximum 3 occurrences per month).
+- Late arrival beyond grace periods will result in automatic half-day Casual Leave deduction.
+- Absence without prior approval for more than 48 consecutive hours will trigger an official inquiry under KMRL Disciplinary Regulations.
+
+Approved by: General Manager (Operations), Kochi Metro Rail Limited.
+Effective Date: November 1, 2026.

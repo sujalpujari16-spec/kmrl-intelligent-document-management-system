@@ -72,6 +72,15 @@ export class BlockchainEngine {
   public static initialize(): void {
     if (this.initialized) return;
 
+    const rootSeedLedger = path.resolve(process.cwd(), 'data', 'blockchain_ledger.json');
+    if (!fs.existsSync(LEDGER_FILE) && fs.existsSync(rootSeedLedger)) {
+      try {
+        fs.copyFileSync(rootSeedLedger, LEDGER_FILE);
+      } catch (err) {
+        // Continue
+      }
+    }
+
     if (fs.existsSync(LEDGER_FILE)) {
       try {
         const raw = fs.readFileSync(LEDGER_FILE, 'utf-8');

@@ -53,7 +53,13 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   }
 
   // Exempt public login attempt or internal test requests
-  if (req.path === '/api/auth/login' && req.method === 'POST') {
+  const isLogin = (
+    req.path === '/api/auth/login' ||
+    req.path.endsWith('/auth/login') ||
+    (req.originalUrl && req.originalUrl.includes('/api/auth/login')) ||
+    (req.url && req.url.includes('/api/auth/login'))
+  );
+  if (isLogin && req.method === 'POST') {
     return next();
   }
 
@@ -69,7 +75,8 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
         ALLOWED_ORIGIN_SET.has(originBase) ||
         (host && originUrl.host === host) ||
         originUrl.host.includes('localhost') ||
-        originUrl.host.includes('127.0.0.1');
+        originUrl.host.includes('127.0.0.1') ||
+        originUrl.host.endsWith('.vercel.app');
 
       if (!isAllowed) {
         return res.status(403).json({

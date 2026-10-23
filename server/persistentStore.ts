@@ -47,6 +47,15 @@ export class PersistentStore {
 
     BlockchainEngine.initialize();
 
+    const rootSeedFile = path.resolve(process.cwd(), 'data', 'kmrl_idms_db.json');
+    if (!fs.existsSync(DB_FILE) && fs.existsSync(rootSeedFile)) {
+      try {
+        fs.copyFileSync(rootSeedFile, DB_FILE);
+      } catch (err) {
+        // Continue
+      }
+    }
+
     if (fs.existsSync(DB_FILE)) {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');

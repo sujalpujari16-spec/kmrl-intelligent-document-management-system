@@ -1,0 +1,27 @@
+================================================================================
+KOCHI METRO RAIL LIMITED (KMRL) - PROCUREMENT & CONTRACTS DIRECTORATE
+NOTICE INVITING TENDER (NIT) - GLOBAL COMPETITIVE BIDDING
+Tender Ref No: KMRL/PR/SOLAR/MUTTOM/2026/019 | e-Tender Portal: etenders.kerala.gov.in
+================================================================================
+
+1. PROJECT TITLE
+Design, Engineering, Supply, Installation, Testing, and Commissioning of 2.5 MWp Grid-Connected Rooftop Solar Photovoltaic (SPV) Power Plant at Muttom Maintenance Depot and Administrative Complex, including 10 Years Comprehensive Operation & Maintenance (O&M).
+
+2. KEY PARAMETERS & CRITICAL DATES
+- Estimated Project Cost: INR 11,85,00,000/- (Eleven Crores Eighty-Five Lakhs Only)
+- Earnest Money Deposit (EMD): INR 11,85,000/- (via Bank Guarantee / Online NEFT)
+- Tender Document Fee: INR 15,000/- (Non-Refundable)
+- Tender Publishing Date: October 15, 2026
+- Pre-Bid Meeting (Hybrid): October 28, 2026 at 11:00 AM (KMRL HQ, Revenue Tower)
+- Last Date for Online Bid Submission: November 18, 2026, 15:00 HRS
+- Technical Bid Opening Date: November 19, 2026, 15:30 HRS
+
+3. MINIMUM TECHNICAL QUALIFICATIONS
+3.1 The bidder must have successfully commissioned at least one single grid-tied rooftop solar power project of minimum 1.5 MWp capacity for any Metro Rail, Indian Railways, or Central/State PSU in the past 5 years.
+3.2 The solar modules must be Tier-1 Mono-PERC bifacial panels certified as per IEC 61215 and IEC 61730 standards with a minimum efficiency rating of 21.5%.
+3.3 Inverters must adhere to IEEE 1547 and possess zero-export dynamic feed limiters compliant with KSEBL grid codes.
+
+4. SUBMISSION INSTRUCTIONS
+Bids must be uploaded strictly through the Kerala Government e-Procurement portal. Hardcopy submissions of Technical Bids must be sealed and delivered to the Executive Director (Projects & Electrical), KMRL Corporate Office, 4th Floor, JLN Stadium Complex, Kochi.
+
+Authorised Signatory: General Manager (Procurement & Contracts), KMRL

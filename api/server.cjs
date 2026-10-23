@@ -71,6 +71,13 @@ var init_blockchainEngine = __esm({
       }
       static initialize() {
         if (this.initialized) return;
+        const rootSeedLedger = import_path.default.resolve(process.cwd(), "data", "blockchain_ledger.json");
+        if (!import_fs.default.existsSync(LEDGER_FILE) && import_fs.default.existsSync(rootSeedLedger)) {
+          try {
+            import_fs.default.copyFileSync(rootSeedLedger, LEDGER_FILE);
+          } catch (err) {
+          }
+        }
         if (import_fs.default.existsSync(LEDGER_FILE)) {
           try {
             const raw = import_fs.default.readFileSync(LEDGER_FILE, "utf-8");
@@ -297,6 +304,13 @@ var init_persistentStore = __esm({
       static initialize(defaultSeed) {
         if (this.initialized) return;
         BlockchainEngine.initialize();
+        const rootSeedFile = import_path2.default.resolve(process.cwd(), "data", "kmrl_idms_db.json");
+        if (!import_fs2.default.existsSync(DB_FILE) && import_fs2.default.existsSync(rootSeedFile)) {
+          try {
+            import_fs2.default.copyFileSync(rootSeedFile, DB_FILE);
+          } catch (err) {
+          }
+        }
         if (import_fs2.default.existsSync(DB_FILE)) {
           try {
             const raw = import_fs2.default.readFileSync(DB_FILE, "utf-8");
@@ -1515,6 +1529,9 @@ async function indexDocumentToPgVector(doc) {
   if (doc.status !== "Approved") {
     return { chunksIndexed: 0 };
   }
+  if (!isSupabaseConfigured()) {
+    return { chunksIndexed: 0 };
+  }
   if (!doc.extractedText || doc.extractedText.trim().length === 0) {
     return { chunksIndexed: 0 };
   }
@@ -2365,7 +2382,8 @@ function csrfProtection(req, res, next) {
   if (!mutatingMethods.includes(req.method)) {
     return next();
   }
-  if (req.path === "/api/auth/login" && req.method === "POST") {
+  const isLogin = req.path === "/api/auth/login" || req.path.endsWith("/auth/login") || req.originalUrl && req.originalUrl.includes("/api/auth/login") || req.url && req.url.includes("/api/auth/login");
+  if (isLogin && req.method === "POST") {
     return next();
   }
   const origin = req.headers["origin"] || req.headers["referer"];
@@ -2374,7 +2392,7 @@ function csrfProtection(req, res, next) {
     try {
       const originUrl = new URL(origin);
       const originBase = `${originUrl.protocol}//${originUrl.host}`;
-      const isAllowed = ALLOWED_ORIGIN_SET.has(originBase) || host && originUrl.host === host || originUrl.host.includes("localhost") || originUrl.host.includes("127.0.0.1");
+      const isAllowed = ALLOWED_ORIGIN_SET.has(originBase) || host && originUrl.host === host || originUrl.host.includes("localhost") || originUrl.host.includes("127.0.0.1") || originUrl.host.endsWith(".vercel.app");
       if (!isAllowed) {
         return res.status(403).json({
           error: "CSRF validation failed",
@@ -2856,7 +2874,8 @@ app.post("/api/auth/login", authRateLimiter, validateBody(LoginSchema), async (r
       role: profile.role,
       department: profile.department,
       avatar: profile.avatar
-    }
+    },
+    token: sessionToken
   });
 });
 app.get("/api/auth/me", (req, res) => {
@@ -2871,7 +2890,8 @@ app.get("/api/auth/me", (req, res) => {
         role: req.user.role,
         department: req.user.department,
         avatar: req.user.avatar
-      }
+      },
+      token: `kmrl_dev_session_${req.user.id}`
     });
   }
   return res.json({ authenticated: false });
@@ -3033,9 +3053,9 @@ app.post(
         "HR"
       );
       broadcastRoleEvent(["HR", "Admin"], "document_pending", { title, uploadedBy: req.user.name });
-    } else {
-      broadcastSystemEvent("document_added", newDoc);
+      broadcastRoleEvent(["HR", "Admin"], "notification_created", { title: "New Document Pending Approval" });
     }
+    broadcastSystemEvent("document_added", newDoc);
     return res.status(201).json(newDoc);
   }
 );
@@ -3082,10 +3102,14 @@ app.post(
     if (!updated) {
       return res.status(404).json({ error: "Document not found" });
     }
-    if (newStatus === "Approved") {
-      await indexDocumentToPgVector(updated);
-    } else {
-      await removeDocumentPgVectorChunks(updated.id);
+    try {
+      if (newStatus === "Approved") {
+        await indexDocumentToPgVector(updated);
+      } else {
+        await removeDocumentPgVectorChunks(updated.id);
+      }
+    } catch (embErr) {
+      console.warn("[pgvector Indexing/Removal Warning]:", embErr);
     }
     await SupabaseDBService.logAudit(
       req.user.id,
@@ -3099,6 +3123,13 @@ app.post(
       "SUCCESS",
       req.requestId
     );
+    await SupabaseDBService.addNotification(
+      `Document ${newStatus}`,
+      `"${updated.title}" was marked as ${newStatus} by ${req.user.name}.`,
+      newStatus === "Approved" ? "success" : "warning",
+      "All"
+    );
+    broadcastSystemEvent("notification_created", { title: `Document ${newStatus}` });
     broadcastSystemEvent("document_updated", updated);
     return res.json(updated);
   }
@@ -3295,6 +3326,14 @@ app.post("/api/leaves", requireAuth, validateBody(LeaveApplicationSchema), async
       req.requestId
     );
     broadcastRoleEvent(["HR", "Admin"], "leave_pending", newLeave);
+    broadcastSystemEvent("leave_created", newLeave);
+    await SupabaseDBService.addNotification(
+      "New Leave Application",
+      `${req.user.name} (${req.user.department}) applied for ${durationDays} day(s) ${leaveType}.`,
+      "info",
+      "HR"
+    );
+    broadcastSystemEvent("notification_created", { title: "New Leave Application" });
     return res.status(201).json(newLeave);
   } catch (err) {
     return res.status(400).json({ error: err.message });
@@ -3310,6 +3349,13 @@ var handleLeaveActionRoute = async (req, res) => {
         req.user.name,
         notes
       );
+      await SupabaseDBService.addNotification(
+        "Leave Application Approved",
+        `Leave application ${req.params.id} has been approved by ${req.user.name}.`,
+        "success",
+        "All"
+      );
+      broadcastSystemEvent("notification_created", { title: "Leave Application Approved" });
       broadcastSystemEvent("leave_updated", { id: req.params.id, status: "Approved" });
       return res.json(result);
     } catch (err) {
@@ -3317,6 +3363,13 @@ var handleLeaveActionRoute = async (req, res) => {
     }
   } else {
     await SupabaseDBService.rejectLeaveApplication(req.params.id, req.user.id, req.user.name, notes);
+    await SupabaseDBService.addNotification(
+      "Leave Application Rejected",
+      `Leave application ${req.params.id} was rejected by ${req.user.name}. Notes: ${notes || "None"}`,
+      "warning",
+      "All"
+    );
+    broadcastSystemEvent("notification_created", { title: "Leave Application Rejected" });
     broadcastSystemEvent("leave_updated", { id: req.params.id, status: "Rejected" });
     return res.json({ success: true, message: "Leave application rejected." });
   }
@@ -3478,6 +3531,12 @@ app.get("/api/health", (req, res) => {
     timestamp: (/* @__PURE__ */ new Date()).toISOString(),
     mode: "Supabase PostgreSQL Cloud Mode",
     vectorDimension: 768
+  });
+});
+app.all("/api/*", (req, res) => {
+  res.status(404).json({
+    error: "API Endpoint Not Found",
+    message: `Cannot ${req.method} ${req.path}`
   });
 });
 app.use(safeErrorHandler);
