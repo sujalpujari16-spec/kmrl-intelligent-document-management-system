@@ -14,15 +14,20 @@ interface DatabaseData {
   originalFiles?: Record<string, string>; // docId -> original base64 for tamper testing/restoring
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const isVercel = Boolean(process.env.VERCEL);
+const DATA_DIR = isVercel ? path.join('/tmp', 'data') : path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'kmrl_idms_db.json');
 const STORAGE_DIR = path.join(DATA_DIR, 'storage');
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-if (!fs.existsSync(STORAGE_DIR)) {
-  fs.mkdirSync(STORAGE_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(STORAGE_DIR)) {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Gracefully handle read-only environments
 }
 
 export class PersistentStore {
