@@ -409,7 +409,7 @@
   ],
   "auditLogs": [
     {
-      "id": "audit-1792788801927-zchg",
+      "id": "audit-1792790017168-8xat",
       "userId": "00000000-0000-0000-0000-000000000001",
       "userName": "Sujal Pujari",
       "userRole": "Admin",
@@ -418,9 +418,64 @@
       "ipAddress": "::ffff:127.0.0.1",
       "userAgent": "node",
       "result": "SUCCESS",
-      "requestId": "REQ-1792788801921-7CF242",
-      "createdAt": "2026-10-23 20:53:21",
-      "timestamp": "2026-10-23 20:53:21"
+      "requestId": "REQ-1792790017160-EA5CEC",
+      "createdAt": "2026-10-23 21:13:37",
+      "timestamp": "2026-10-23 21:13:37"
+    },
+    {
+      "id": "audit-1792789914824-rau1",
+      "userName": "admin@kmrl.in",
+      "userRole": "Employee",
+      "action": "Failed Login Attempt",
+      "details": "Failed authentication attempt for admin@kmrl.in",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/8.12.1",
+      "result": "FAILED",
+      "requestId": "REQ-1792789914821-1FCFF0",
+      "createdAt": "2026-10-23 21:11:54",
+      "timestamp": "2026-10-23 21:11:54"
+    },
+    {
+      "id": "audit-1792789877872-dz0j",
+      "userId": "00000000-0000-0000-0000-000000000001",
+      "userName": "Sujal Pujari",
+      "userRole": "Admin",
+      "action": "User Login",
+      "details": "Successful login by Sujal Pujari (Admin)",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/8.12.1",
+      "result": "SUCCESS",
+      "requestId": "REQ-1792789877869-0EAB50",
+      "createdAt": "2026-10-23 21:11:17",
+      "timestamp": "2026-10-23 21:11:17"
+    },
+    {
+      "id": "audit-1792789872321-ue5b",
+      "userId": "00000000-0000-0000-0000-000000000001",
+      "userName": "Sujal Pujari",
+      "userRole": "Admin",
+      "action": "User Login",
+      "details": "Successful login by Sujal Pujari (Admin)",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/8.12.1",
+      "result": "SUCCESS",
+      "requestId": "REQ-1792789872319-E5FEF7",
+      "createdAt": "2026-10-23 21:11:12",
+      "timestamp": "2026-10-23 21:11:12"
+    },
+    {
+      "id": "audit-1792789872292-flbr",
+      "userId": "00000000-0000-0000-0000-000000000001",
+      "userName": "Sujal Pujari",
+      "userRole": "Admin",
+      "action": "User Login",
+      "details": "Successful login by Sujal Pujari (Admin)",
+      "ipAddress": "127.0.0.1",
+      "userAgent": "curl/8.12.1",
+      "result": "SUCCESS",
+      "requestId": "REQ-1792789872288-87B7D5",
+      "createdAt": "2026-10-23 21:11:12",
+      "timestamp": "2026-10-23 21:11:12"
     },
     {
       "id": "audit-1792788801570-e9i4",

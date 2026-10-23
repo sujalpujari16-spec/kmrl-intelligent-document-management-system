@@ -1,5 +1,5 @@
 import { createServer } from 'http';
-import vercelHandler from '../api/index.cjs';
+import vercelHandler from '../api/index.js';
 
 async function testVercelHandler() {
   console.log('--- TESTING VERCEL SERVERLESS HANDLER SIMULATION ---');
