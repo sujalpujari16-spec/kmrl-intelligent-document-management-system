@@ -304,7 +304,19 @@ export async function searchVectorDb(
     const { SupabaseDBService } = await import('./dbService');
     const docs = await SupabaseDBService.getDocuments('Admin');
     const cleanQ = query.toLowerCase().trim();
-    const queryTerms = cleanQ.split(/\s+/).filter((t) => t.length > 1);
+
+    const STOP_WORDS = new Set([
+      'what', 'is', 'the', 'in', 'of', 'and', 'to', 'a', 'an', 'for', 'on', 'with', 'at',
+      'by', 'from', 'as', 'about', 'how', 'do', 'does', 'can', 'could', 'should', 'would',
+      'i', 'me', 'my', 'we', 'our', 'you', 'your', 'he', 'she', 'it', 'they', 'them',
+      'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'this', 'that',
+      'these', 'those', 'there', 'their', 'which', 'who', 'whom', 'whose', 'tell', 'show',
+      'give', 'please', 'any', 'some', 'many', 'much', 'so'
+    ]);
+
+    const allTerms = cleanQ.split(/\s+/).filter((t) => t.length > 1);
+    const keyTerms = allTerms.filter((t) => !STOP_WORDS.has(t));
+    const activeTerms = keyTerms.length > 0 ? keyTerms : allTerms;
 
     const matches: {
       docId: string;
@@ -321,18 +333,35 @@ export async function searchVectorDb(
 
     for (const doc of docs) {
       if (categoryFilter !== 'All' && doc.category !== categoryFilter) continue;
+      if (doc.status && doc.status !== 'Approved') continue;
 
-      const docText = `${doc.title} ${doc.category} ${doc.extractedText || ''}`.toLowerCase();
-      let matchedCount = 0;
-      for (const term of queryTerms) {
-        if (docText.includes(term)) matchedCount++;
+      const titleLower = doc.title.toLowerCase();
+      const catLower = doc.category.toLowerCase();
+      const bodyLower = (doc.extractedText || '').toLowerCase();
+      const combined = `${titleLower} ${catLower} ${bodyLower}`;
+
+      let titleMatches = 0;
+      let bodyMatches = 0;
+
+      for (const term of activeTerms) {
+        if (titleLower.includes(term) || catLower.includes(term)) {
+          titleMatches++;
+        }
+        if (bodyLower.includes(term)) {
+          bodyMatches++;
+        }
       }
 
-      const isSubMatch = docText.includes(cleanQ);
-      if (matchedCount > 0 || isSubMatch || queryTerms.length === 0) {
-        const score = isSubMatch
-          ? 0.96
-          : Math.min(0.6 + (matchedCount / Math.max(queryTerms.length, 1)) * 0.35, 0.95);
+      const totalMatches = titleMatches + bodyMatches;
+      const isExactPhrase = combined.includes(cleanQ);
+
+      if (totalMatches > 0 || isExactPhrase) {
+        let score = 0.5;
+        if (isExactPhrase) score += 0.35;
+        // Title matches have 3x weight
+        score += Math.min((titleMatches * 0.15) + (bodyMatches * 0.05), 0.4);
+        score = Math.min(Math.max(score, 0.45), 0.98);
+
         const snippet = (doc.extractedText && doc.extractedText.length > 20)
           ? doc.extractedText
           : `Official KMRL Document: ${doc.title} (${doc.category}).`;

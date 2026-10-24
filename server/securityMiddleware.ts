@@ -76,7 +76,11 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
         (host && originUrl.host === host) ||
         originUrl.host.includes('localhost') ||
         originUrl.host.includes('127.0.0.1') ||
-        originUrl.host.endsWith('.vercel.app');
+        originUrl.host.endsWith('.vercel.app') ||
+        originUrl.host.endsWith('.trycloudflare.com') ||
+        originUrl.host.endsWith('.loca.lt') ||
+        originUrl.host.endsWith('.onrender.com') ||
+        originUrl.host.endsWith('.up.railway.app');
 
       if (!isAllowed) {
         return res.status(403).json({

@@ -21,14 +21,14 @@ export interface MCPToolResponse {
 // 1. Strict MCP Permission Matrix by User Role
 const TOOL_PERMISSIONS: Record<string, UserRole[]> = {
   get_schema: ['Admin', 'HR'],
-  get_document_count: ['Admin', 'HR'],
+  get_document_count: ['Admin', 'HR', 'Employee'],
   search_documents: ['Admin', 'HR', 'Employee'],
   get_document_details: ['Admin', 'HR', 'Employee'],
   get_leave_balance: ['Admin', 'HR', 'Employee'],
   get_my_leave_requests: ['Admin', 'HR', 'Employee'],
   get_pending_approvals: ['Admin', 'HR'],
-  get_employee_directory: ['Admin', 'HR'],
-  get_statistics: ['Admin', 'HR'],
+  get_employee_directory: ['Admin', 'HR', 'Employee'],
+  get_statistics: ['Admin', 'HR', 'Employee'],
 };
 
 const FILESYSTEM_TOOL_PERMISSIONS: Record<string, UserRole[]> = {

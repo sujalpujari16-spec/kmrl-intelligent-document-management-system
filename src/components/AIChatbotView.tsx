@@ -98,22 +98,40 @@ I can assist you with:
     setLoading(true);
 
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('kmrl_token') : null;
+      let storedUser: any = {};
+      try {
+        const storedUserStr = typeof window !== 'undefined' ? localStorage.getItem('kmrl_user') : null;
+        if (storedUserStr) storedUser = JSON.parse(storedUserStr);
+      } catch {}
+
+      const authHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-user-role': userRole || storedUser.role || 'Employee',
+        'x-user-name': userName || storedUser.name || 'KMRL Staff',
+        'x-user-id': storedUser.id || '',
+        'x-user-email': storedUser.email || '',
+      };
+      if (token) {
+        authHeaders['authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-role': userRole,
-          'x-user-name': userName,
-        },
-        credentials: 'same-origin',
+        headers: authHeaders,
+        credentials: 'include',
         body: JSON.stringify({
           query: textToSend,
-          userRole,
+          userRole: userRole || storedUser.role || 'Employee',
         }),
       });
 
       const data = await res.json();
-      const responseText = data.responseText || data.message || data.error || (data.details ? `Notice: ${data.details}` : 'I am available to assist you with KMRL document queries and leave policies.');
+      if (!res.ok) {
+        throw new Error(data.message || data.error || `HTTP ${res.status}`);
+      }
+
+      const responseText = data.responseText || data.message || 'I am available to assist you with KMRL document queries and leave policies.';
 
       const aiMsgId = `ai-${Date.now()}`;
       const aiMsg: ChatMessage = {
@@ -128,12 +146,12 @@ I can assist you with:
       };
 
       setMessages((prev) => [...prev, aiMsg]);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err);
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         sender: 'assistant',
-        text: 'Apologies, the KMRL AI Assistant encountered an error connecting to the backend. Please try again.',
+        text: `Apologies, the KMRL AI Assistant encountered an issue: ${err.message || 'Connection error'}. Please try again.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMsg]);
